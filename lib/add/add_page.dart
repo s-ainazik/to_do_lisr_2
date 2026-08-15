@@ -64,7 +64,7 @@ class _AddPageState extends State<AddPage> {
                   borderRadius: BorderRadius.circular(7),
                 ),
               ),
-              onPressed: saveTask,
+              onPressed: saveTodo,
               child: const Text('Сохранить'),
             ),
           ),
@@ -73,7 +73,7 @@ class _AddPageState extends State<AddPage> {
     );
   }
 
-  void saveTask() {
+  void saveTodo() {
     Navigator.pop(context, textController.text);
   }
 
@@ -83,99 +83,3 @@ class _AddPageState extends State<AddPage> {
     super.dispose();
   }
 }
-
-
-// import 'package:flutter/material.dart';
-// import 'dart:async';
-//
-// class AddPage extends StatefulWidget {
-//   const AddPage({super.key});
-//
-//   //создать состояние - выделить память для stateful виджет
-//   @override
-//   State<AddPage> createState() => _AddPageState();
-// }
-//
-// class _AddPageState extends State<AddPage> {
-//   late Timer _timer;
-//   TextEditingController _textEditingController = TextEditingController();
-//
-//   //создание в памяти - виджет появляется в оперативной памяти
-//    @override
-//   void initState() {
-//     // TODO: implement initState
-//     super.initState();
-//     //Запускать таймеры, анимации
-//     //Инициализорвать свойства
-//     //Подгружать данные с сети, с локального хранилища
-//     print("Add Page - initState");
-//
-//     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-//       final date = DateTime.now();
-//       print("${date.minute} : ${date.second}");
-//     });
-//   }
-//
-//   @override
-//   void didChangeDependencies() {
-//     // TODO: implement didChangeDependencies
-//     super.didChangeDependencies();
-//     //при обновлении тем, языков и т.д. (глобальные изменения)
-//     print("Add Page - didChangeDepencies");
-//   }
-//
-// //рисует интерфейс с готовыми данными
-//   @override
-//   Widget build(BuildContext context) {
-//     print("Add Page - build");
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-//         title: Text(''),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: .center,
-//           children: [
-//            TextField(
-//             decoration: InputDecoration(border: OutlineInputBorder()),
-//             controller: _textEditingController,
-//            ),
-//            TextButton(onPressed: _onSaveTap, child: Text("Сохранить"))
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-//
-//   void _onSaveTap() {
-//     Navigator.pop(context, _textEditingController.text);
-//   }
-//
-//   @override
-//   void didUpdateWidget(covariant AddPage oldWidget) {
-//     // TODO: implement didUpdateWidget
-//     super.didUpdateWidget(oldWidget);
-//     //обновить свойства в дочерних виджетах
-//     print("Add Page didUpdateWidget");
-//   }
-//
-//   @override
-//   void deactivate() {
-//     // TODO: implement deactivate
-//     super.deactivate();
-//     //ничего не делается
-//     print("Add Page - deactivate");
-//   }
-//
-//   @override
-//   void dispose() {
-//     // TODO: implement dispose
-//     super.dispose();
-//     //таймеры выключать
-//     //слушателей (controller) выключать
-//     //слушатели (stream)
-//     _timer.cancel();
-//     print("Add Page - dispose");
-//   }
-// }

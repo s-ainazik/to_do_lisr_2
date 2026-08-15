@@ -1,84 +1,113 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_2/add/add_page.dart';
-import 'package:to_do_list_2/models/task.dart';
+import 'package:to_do_list_2/database/app_database.dart';
+import 'package:to_do_list_2/database/app_repository.dart';
+import 'package:to_do_list_2/database/todo.dart';
+import 'package:to_do_list_2/home/home_cubit.dart';
+import 'package:to_do_list_2/home/home_state.dart';
 import 'package:to_do_list_2/settings/settings_page.dart';
 
-class HomePage extends StatefulWidget {
+class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  final List<Task> tasks = [
-    Task(title: 'Сделать домашнее задание', date: '14.09.26'),
-    Task(title: 'Сделать домашнее задание', date: '14.09.26', isDone: true),
-  ];
-
-  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: const Color(0xfff5f3fa),
-        title: const Text(
-          'Мои задачи',
-          style: TextStyle(
-            color: Color(0xff222222),
-            fontSize: 20,
-            fontWeight: FontWeight.w400,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: openSettingsPage,
-            icon: const Icon(Icons.settings),
-          ),
-        ],
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.only(
-          left: 18,
-          right: 18,
-          top: 40,
-          bottom: 90,
-        ),
-        itemCount: tasks.length,
-        itemBuilder: (context, index) {
-          return TaskItem(
-            task: tasks[index],
-            onChanged: (value) {
-              setState(() {
-                tasks[index].isDone = value ?? false;
-              });
-            },
+    return BlocProvider(
+      create: (context) =>
+          HomeCubit(repo: AppRepositoryImpl(db: AppDatabase()))..getTodoList(),
+      child: BlocBuilder<HomeCubit, HomeState>(
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(
+              centerTitle: true,
+              backgroundColor: const Color(0xfff5f3fa),
+              title: const Text(
+                'Мои задачи',
+                style: TextStyle(
+                  color: Color(0xff222222),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    openSettingsPage(context);
+                  },
+                  icon: const Icon(Icons.settings),
+                ),
+              ],
+            ),
+            body: getBody(context, state),
+            floatingActionButton: FloatingActionButton(
+              backgroundColor: const Color(0xff0d83f6),
+              foregroundColor: Colors.white,
+              onPressed: () {
+                openAddPage(context);
+              },
+              child: const Icon(Icons.add),
+            ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xff0d83f6),
-        foregroundColor: Colors.white,
-        onPressed: openAddPage,
-        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Future<void> openAddPage() async {
+  Widget getBody(BuildContext context, HomeState state) {
+    if (state.status == TodoStatus.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.status == TodoStatus.empty) {
+      return const Center(
+        child: Text(
+          'Список задач пустой',
+          style: TextStyle(color: Color(0xff222222), fontSize: 16),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(left: 18, right: 18, top: 40, bottom: 90),
+      itemCount: state.todoList.length,
+      itemBuilder: (context, index) {
+        return TodoItem(
+          todo: state.todoList[index],
+          onChanged: (value) {
+            context.read<HomeCubit>().changeTodoStatus(
+              index: index,
+              isDone: value ?? false,
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> openAddPage(BuildContext context) async {
     final result = await Navigator.push<String>(
       context,
       MaterialPageRoute(builder: (context) => const AddPage()),
     );
 
+    if (!context.mounted) {
+      return;
+    }
+
     if (result != null && result.trim().isNotEmpty) {
-      setState(() {
-        tasks.insert(0, Task(title: result.trim(), date: getDate()));
-      });
+      context.read<HomeCubit>().addTodo(
+        Todo(
+          id: DateTime.now().millisecondsSinceEpoch,
+          title: result.trim(),
+          createdAt: getDate(),
+          isDone: false,
+        ),
+      );
     }
   }
 
-  void openSettingsPage() {
+  void openSettingsPage(BuildContext context) {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const SettingsPage()),
@@ -95,10 +124,10 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class TaskItem extends StatelessWidget {
-  const TaskItem({super.key, required this.task, required this.onChanged});
+class TodoItem extends StatelessWidget {
+  const TodoItem({super.key, required this.todo, required this.onChanged});
 
-  final Task task;
+  final Todo todo;
   final ValueChanged<bool?> onChanged;
 
   @override
@@ -116,7 +145,7 @@ class TaskItem extends StatelessWidget {
           SizedBox(
             width: 28,
             child: Checkbox(
-              value: task.isDone,
+              value: todo.isDone,
               onChanged: onChanged,
               checkColor: Colors.black,
               activeColor: Colors.white,
@@ -126,7 +155,7 @@ class TaskItem extends StatelessWidget {
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              task.title,
+              todo.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white, fontSize: 13),
@@ -146,7 +175,7 @@ class TaskItem extends StatelessWidget {
                   ),
                   const SizedBox(width: 3),
                   Text(
-                    task.date,
+                    todo.createdAt,
                     style: const TextStyle(color: Colors.white, fontSize: 8),
                   ),
                 ],
@@ -160,160 +189,4 @@ class TaskItem extends StatelessWidget {
   }
 }
 
-// import 'dart:math';
 //
-// import 'package:flutter/material.dart';
-// import 'package:to_do_list_2/add/add_page.dart';
-// import 'package:to_do_list_2/settings/settings_page.dart';
-//
-// class MyHomePage extends StatefulWidget {
-//   const MyHomePage({super.key, required this.title});
-//
-//   final String title;
-//
-//   //создать состояние - выделить память для stateful виджет
-//   @override
-//   State<MyHomePage> createState() => _MyHomePageState();
-// }
-//
-// class _MyHomePageState extends State<MyHomePage> {
-//   late int _counter;
-//   bool _isTextVisible = true;
-//   TextEditingController _textEditingController = TextEditingController();
-//   Color _containerColor = Colors.blue;
-//   List<Color> _colorList = [
-//     Colors.blue,
-//     Colors.red,
-//     Colors.yellowAccent,
-//     Colors.green,
-//   ];
-//
-//   //создание в памяти - виджет появляется в оперативной памяти
-//   @override
-//   void initState() {
-//     // TODO: implement initState
-//     super.initState();
-//     //Запускать таймеры, анимации
-//     //Инициализорвать свойства
-//     _counter = 0;
-//     //Подгружать данные с сети, с локального хранилища
-//     print("Home Page - initState");
-//   }
-//
-//   @override
-//   void didChangeDependencies() {
-//     // TODO: implement didChangeDependencies
-//     super.didChangeDependencies();
-//     //при обновлении тем, языков и т.д. (глобальные изменения)
-//     print("Home Page - didChangeDepencies");
-//   }
-//
-//   //рисует интерфейс с готовыми данными
-//   @override
-//   Widget build(BuildContext context) {
-//     print("Home Page - build");
-//     return Scaffold(
-//       appBar: AppBar(
-//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-//         title: Text(widget.title),
-//         actions: [
-//           IconButton(
-//             onPressed: _onSettingsTap,
-//             icon: const Icon(Icons.settings),
-//           ),
-//         ],
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: .center,
-//           children: [
-//             Visibility(
-//               child: const Text('You have pushed the button this many times:'),
-//               visible: _isTextVisible,
-//             ),
-//
-//             TextField(
-//               decoration: InputDecoration(border: OutlineInputBorder()),
-//               controller: _textEditingController,
-//               onChanged: (value) {
-//                 setState(() {
-//                   _counter = _textEditingController.text.length;
-//                 });
-//               },
-//             ),
-//             Text(
-//               '$_counter',
-//               style: Theme.of(context).textTheme.headlineMedium,
-//             ),
-//             TextButton(
-//               onPressed: _toggleText,
-//               child: Text(_isTextVisible ? "Скрыть" : "Поуказать"),
-//             ),
-//             Container(width: 300, height: 200, color: _containerColor),
-//             TextButton(onPressed: _changeColors, child: Text("Поменять цвет")),
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         onPressed: _onAddTap,
-//         tooltip: 'Increment',
-//         child: const Icon(Icons.add),
-//       ),
-//     );
-//   }
-//
-//   void _toggleText() {
-//     setState(() {
-//       _isTextVisible = !_isTextVisible;
-//     });
-//   }
-//
-//   void _changeColors() {
-//     setState(() {
-//       _containerColor = _colorList[Random().nextInt(_colorList.length)];
-//     });
-//   }
-//
-//   void _onAddTap() async {
-//     final result = await Navigator.push(
-//       context,
-//       MaterialPageRoute(builder: (_) => AddPage()),
-//     );
-//     if (result != null) {
-//       print("$result");
-//     }
-//   }
-//
-//   void _onSettingsTap() {
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(builder: (_) => const SettingsPage()),
-//     );
-//   }
-//
-//   @override
-//   void didUpdateWidget(covariant MyHomePage oldWidget) {
-//     // TODO: implement didUpdateWidget
-//     super.didUpdateWidget(oldWidget);
-//     //обновить свойства в дочерних виджетах
-//     print("Home Page didUpdateWidget");
-//   }
-//
-//   @override
-//   void deactivate() {
-//     // TODO: implement deactivate
-//     super.deactivate();
-//     //ничего не делается
-//     print("Home Page - deactivate");
-//   }
-//
-//   @override
-//   void dispose() {
-//     // TODO: implement dispose
-//     super.dispose();
-//     //таймеры выключать
-//     //слушателей (controller) выключать
-//     //слушатели (stream)
-//     print("Home Page - dispose");
-//   }
-// }
