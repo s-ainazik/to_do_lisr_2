@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:to_do_list_2/add/add_page.dart';
 import 'package:to_do_list_2/models/task.dart';
+import 'package:to_do_list_2/settings/settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,7 +14,6 @@ class _HomePageState extends State<HomePage> {
   final List<Task> tasks = [
     Task(title: 'Сделать домашнее задание', date: '14.09.26'),
     Task(title: 'Сделать домашнее задание', date: '14.09.26', isDone: true),
-
   ];
 
   @override
@@ -30,6 +30,12 @@ class _HomePageState extends State<HomePage> {
             fontWeight: FontWeight.w400,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: openSettingsPage,
+            icon: const Icon(Icons.settings),
+          ),
+        ],
       ),
       body: ListView.builder(
         padding: const EdgeInsets.only(
@@ -70,6 +76,13 @@ class _HomePageState extends State<HomePage> {
         tasks.insert(0, Task(title: result.trim(), date: getDate()));
       });
     }
+  }
+
+  void openSettingsPage() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const SettingsPage()),
+    );
   }
 
   String getDate() {
@@ -146,3 +159,161 @@ class TaskItem extends StatelessWidget {
     );
   }
 }
+
+// import 'dart:math';
+//
+// import 'package:flutter/material.dart';
+// import 'package:to_do_list_2/add/add_page.dart';
+// import 'package:to_do_list_2/settings/settings_page.dart';
+//
+// class MyHomePage extends StatefulWidget {
+//   const MyHomePage({super.key, required this.title});
+//
+//   final String title;
+//
+//   //создать состояние - выделить память для stateful виджет
+//   @override
+//   State<MyHomePage> createState() => _MyHomePageState();
+// }
+//
+// class _MyHomePageState extends State<MyHomePage> {
+//   late int _counter;
+//   bool _isTextVisible = true;
+//   TextEditingController _textEditingController = TextEditingController();
+//   Color _containerColor = Colors.blue;
+//   List<Color> _colorList = [
+//     Colors.blue,
+//     Colors.red,
+//     Colors.yellowAccent,
+//     Colors.green,
+//   ];
+//
+//   //создание в памяти - виджет появляется в оперативной памяти
+//   @override
+//   void initState() {
+//     // TODO: implement initState
+//     super.initState();
+//     //Запускать таймеры, анимации
+//     //Инициализорвать свойства
+//     _counter = 0;
+//     //Подгружать данные с сети, с локального хранилища
+//     print("Home Page - initState");
+//   }
+//
+//   @override
+//   void didChangeDependencies() {
+//     // TODO: implement didChangeDependencies
+//     super.didChangeDependencies();
+//     //при обновлении тем, языков и т.д. (глобальные изменения)
+//     print("Home Page - didChangeDepencies");
+//   }
+//
+//   //рисует интерфейс с готовыми данными
+//   @override
+//   Widget build(BuildContext context) {
+//     print("Home Page - build");
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+//         title: Text(widget.title),
+//         actions: [
+//           IconButton(
+//             onPressed: _onSettingsTap,
+//             icon: const Icon(Icons.settings),
+//           ),
+//         ],
+//       ),
+//       body: Center(
+//         child: Column(
+//           mainAxisAlignment: .center,
+//           children: [
+//             Visibility(
+//               child: const Text('You have pushed the button this many times:'),
+//               visible: _isTextVisible,
+//             ),
+//
+//             TextField(
+//               decoration: InputDecoration(border: OutlineInputBorder()),
+//               controller: _textEditingController,
+//               onChanged: (value) {
+//                 setState(() {
+//                   _counter = _textEditingController.text.length;
+//                 });
+//               },
+//             ),
+//             Text(
+//               '$_counter',
+//               style: Theme.of(context).textTheme.headlineMedium,
+//             ),
+//             TextButton(
+//               onPressed: _toggleText,
+//               child: Text(_isTextVisible ? "Скрыть" : "Поуказать"),
+//             ),
+//             Container(width: 300, height: 200, color: _containerColor),
+//             TextButton(onPressed: _changeColors, child: Text("Поменять цвет")),
+//           ],
+//         ),
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: _onAddTap,
+//         tooltip: 'Increment',
+//         child: const Icon(Icons.add),
+//       ),
+//     );
+//   }
+//
+//   void _toggleText() {
+//     setState(() {
+//       _isTextVisible = !_isTextVisible;
+//     });
+//   }
+//
+//   void _changeColors() {
+//     setState(() {
+//       _containerColor = _colorList[Random().nextInt(_colorList.length)];
+//     });
+//   }
+//
+//   void _onAddTap() async {
+//     final result = await Navigator.push(
+//       context,
+//       MaterialPageRoute(builder: (_) => AddPage()),
+//     );
+//     if (result != null) {
+//       print("$result");
+//     }
+//   }
+//
+//   void _onSettingsTap() {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(builder: (_) => const SettingsPage()),
+//     );
+//   }
+//
+//   @override
+//   void didUpdateWidget(covariant MyHomePage oldWidget) {
+//     // TODO: implement didUpdateWidget
+//     super.didUpdateWidget(oldWidget);
+//     //обновить свойства в дочерних виджетах
+//     print("Home Page didUpdateWidget");
+//   }
+//
+//   @override
+//   void deactivate() {
+//     // TODO: implement deactivate
+//     super.deactivate();
+//     //ничего не делается
+//     print("Home Page - deactivate");
+//   }
+//
+//   @override
+//   void dispose() {
+//     // TODO: implement dispose
+//     super.dispose();
+//     //таймеры выключать
+//     //слушателей (controller) выключать
+//     //слушатели (stream)
+//     print("Home Page - dispose");
+//   }
+// }
