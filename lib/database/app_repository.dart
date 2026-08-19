@@ -6,15 +6,25 @@ class AppRepositoryImpl {
 
   AppRepositoryImpl({required this.db});
 
+  Future<void> loadTodoList() async {
+    await db.loadTodoList();
+  }
+
   List<Todo> getTodoList() {
     return db.getTodoList();
   }
 
-  void addTodo(Todo todo) {
-    db.addTodo(todo);
+  Future<void> addTodo(Todo todo) async {
+    await db.addTodo(todo);
   }
 
-  void changeTodoStatus({required int index, required bool isDone}) {
-    db.changeTodoStatus(index: index, isDone: isDone);
+  Future<void> changeTodoStatus({
+    required int index,
+    required bool isDone,
+  }) async {
+    await db.changeTodoStatus(
+      index: index,
+      isDone: isDone,
+    );
   }
 }

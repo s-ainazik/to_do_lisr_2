@@ -1,26 +1,81 @@
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:to_do_list_2/database/todo.dart';
 
 class AppDatabase {
-  List<Todo> todoList = [
-    Todo(id: 1, createdAt: '28.02.2026', isDone: true, title: 'Купить книгу'),
-    Todo(
-      id: 2,
-      createdAt: '28.02.2026',
-      isDone: false,
-      title: 'Купить телефон',
-    ),
-    Todo(id: 3, createdAt: '28.02.2026', isDone: true, title: 'Пойти в зал'),
-  ];
+  List<Todo> todoList = [];
+
+  // Получаем сохраненные задачи
+  Future<void> loadTodoList() async {
+    final preferences = await SharedPreferences.getInstance();
+
+    final int count = preferences.getInt('todoCount') ?? 0;
+
+    todoList = [];
+
+    for (int i = 0; i < count; i++) {
+      final title = preferences.getString('todoTitle$i') ?? '';
+      final createdAt = preferences.getString('todoDate$i') ?? '';
+      final isDone = preferences.getBool('todoDone$i') ?? false;
+      final id = preferences.getInt('todoId$i') ?? 0;
+
+      todoList.add(
+        Todo(
+          id: id,
+          title: title,
+          createdAt: createdAt,
+          isDone: isDone,
+        ),
+      );
+    }
+  }
 
   List<Todo> getTodoList() {
     return todoList;
   }
 
-  void addTodo(Todo todo) {
+  // Добавляем новую задачу в начало списка
+  Future<void> addTodo(Todo todo) async {
     todoList.insert(0, todo);
+
+    await saveTodoList();
   }
 
-  void changeTodoStatus({required int index, required bool isDone}) {
+  // Меняем статус задачи
+  Future<void> changeTodoStatus({
+    required int index,
+    required bool isDone,
+  }) async {
     todoList[index].isDone = isDone;
+
+    await saveTodoList();
+  }
+
+  // Сохраняем все задачи
+  Future<void> saveTodoList() async {
+    final preferences = await SharedPreferences.getInstance();
+
+    await preferences.setInt('todoCount', todoList.length);
+
+    for (int i = 0; i < todoList.length; i++) {
+      await preferences.setString(
+        'todoTitle$i',
+        todoList[i].title,
+      );
+
+      await preferences.setString(
+        'todoDate$i',
+        todoList[i].createdAt,
+      );
+
+      await preferences.setBool(
+        'todoDone$i',
+        todoList[i].isDone,
+      );
+
+      await preferences.setInt(
+        'todoId$i',
+        todoList[i].id,
+      );
+    }
   }
 }

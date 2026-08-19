@@ -9,26 +9,52 @@ class HomeCubit extends Cubit<HomeState> {
   List<Todo> todoList = [];
 
   HomeCubit({required this.repo})
-    : super(const HomeState(todoList: [], status: .isLoading));
+      : super(
+    const HomeState(
+      todoList: [],
+      status: TodoStatus.isLoading,
+    ),
+  );
 
-  void getTodoList() {
-    // просит у Repository список задач
+  // Получаем список задач из Repository
+  Future<void> getTodoList() async {
+    await repo.loadTodoList();
+
     todoList = repo.getTodoList();
 
     if (todoList.isEmpty) {
-      emit(state.copyWith(todoList: todoList, status: .empty));
+      emit(
+        state.copyWith(
+          todoList: todoList,
+          status: TodoStatus.empty,
+        ),
+      );
     } else {
-      emit(state.copyWith(todoList: todoList, status: .success));
+      emit(
+        state.copyWith(
+          todoList: todoList,
+          status: TodoStatus.success,
+        ),
+      );
     }
   }
 
-  void addTodo(Todo todo) {
-    repo.addTodo(todo);
-    getTodoList();
+  // Добавляем новую задачу
+  Future<void> addTodo(Todo todo) async {
+    await repo.addTodo(todo);
+    await getTodoList();
   }
 
-  void changeTodoStatus({required int index, required bool isDone}) {
-    repo.changeTodoStatus(index: index, isDone: isDone);
-    getTodoList();
+  // Меняем состояние задачи
+  Future<void> changeTodoStatus({
+    required int index,
+    required bool isDone,
+  }) async {
+    await repo.changeTodoStatus(
+      index: index,
+      isDone: isDone,
+    );
+
+    await getTodoList();
   }
 }

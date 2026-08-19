@@ -15,17 +15,19 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          HomeCubit(repo: AppRepositoryImpl(db: AppDatabase()))..getTodoList(),
+      HomeCubit(
+        repo: AppRepositoryImpl(
+          db: AppDatabase(),
+        ),
+      )..getTodoList(),
       child: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
               centerTitle: true,
-              backgroundColor: const Color(0xfff5f3fa),
               title: const Text(
                 'Мои задачи',
                 style: TextStyle(
-                  color: Color(0xff222222),
                   fontSize: 20,
                   fontWeight: FontWeight.w400,
                 ),
@@ -56,20 +58,32 @@ class HomePage extends StatelessWidget {
 
   Widget getBody(BuildContext context, HomeState state) {
     if (state.status == TodoStatus.isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
     }
 
     if (state.status == TodoStatus.empty) {
-      return const Center(
+      return Center(
         child: Text(
           'Список задач пустой',
-          style: TextStyle(color: Color(0xff222222), fontSize: 16),
+          style: TextStyle(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : const Color(0xff222222),
+            fontSize: 16,
+          ),
         ),
       );
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(left: 18, right: 18, top: 40, bottom: 90),
+      padding: const EdgeInsets.only(
+        left: 18,
+        right: 18,
+        top: 40,
+        bottom: 90,
+      ),
       itemCount: state.todoList.length,
       itemBuilder: (context, index) {
         return TodoItem(
@@ -88,7 +102,9 @@ class HomePage extends StatelessWidget {
   Future<void> openAddPage(BuildContext context) async {
     final result = await Navigator.push<String>(
       context,
-      MaterialPageRoute(builder: (context) => const AddPage()),
+      MaterialPageRoute(
+        builder: (context) => const AddPage(),
+      ),
     );
 
     if (!context.mounted) {
@@ -110,12 +126,15 @@ class HomePage extends StatelessWidget {
   void openSettingsPage(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const SettingsPage()),
+      MaterialPageRoute(
+        builder: (context) => const SettingsPage(),
+      ),
     );
   }
 
   String getDate() {
     final now = DateTime.now();
+
     final day = now.day.toString().padLeft(2, '0');
     final month = now.month.toString().padLeft(2, '0');
     final year = now.year.toString().substring(2);
@@ -125,7 +144,11 @@ class HomePage extends StatelessWidget {
 }
 
 class TodoItem extends StatelessWidget {
-  const TodoItem({super.key, required this.todo, required this.onChanged});
+  const TodoItem({
+    super.key,
+    required this.todo,
+    required this.onChanged,
+  });
 
   final Todo todo;
   final ValueChanged<bool?> onChanged;
@@ -135,7 +158,10 @@ class TodoItem extends StatelessWidget {
     return Container(
       height: 49,
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.only(left: 8, right: 8),
+      padding: const EdgeInsets.only(
+        left: 8,
+        right: 8,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xff0d83f6),
         borderRadius: BorderRadius.circular(7),
@@ -149,7 +175,10 @@ class TodoItem extends StatelessWidget {
               onChanged: onChanged,
               checkColor: Colors.black,
               activeColor: Colors.white,
-              side: const BorderSide(color: Colors.black, width: 2),
+              side: const BorderSide(
+                color: Colors.black,
+                width: 2,
+              ),
             ),
           ),
           const SizedBox(width: 6),
@@ -158,7 +187,10 @@ class TodoItem extends StatelessWidget {
               todo.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+              ),
             ),
           ),
           const SizedBox(width: 8),
@@ -176,7 +208,10 @@ class TodoItem extends StatelessWidget {
                   const SizedBox(width: 3),
                   Text(
                     todo.createdAt,
-                    style: const TextStyle(color: Colors.white, fontSize: 8),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 8,
+                    ),
                   ),
                 ],
               ),
@@ -188,5 +223,3 @@ class TodoItem extends StatelessWidget {
     );
   }
 }
-
-//
