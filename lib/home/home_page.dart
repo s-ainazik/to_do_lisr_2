@@ -115,19 +115,12 @@ class HomePage extends StatelessWidget {
               isDone: value ?? false,
             );
 
-            context.read<HomeCubit>().updateTodo(
-              newTodo,
-            );
+            context.read<HomeCubit>().updateTodo(newTodo);
           },
-          onEdit: () {
+          onTap: () {
             openEditPage(
               context,
               todo,
-            );
-          },
-          onDelete: () {
-            context.read<HomeCubit>().deleteTodo(
-              todo.id,
             );
           },
         );
@@ -165,11 +158,16 @@ class HomePage extends StatelessWidget {
       BuildContext context,
       Todo todo,
       ) async {
+    final homeCubit = context.read<HomeCubit>();
+
     final result = await Navigator.push<Todo>(
       context,
       MaterialPageRoute(
-        builder: (context) => AddPage(
-          todo: todo,
+        builder: (context) => BlocProvider.value(
+          value: homeCubit,
+          child: AddPage(
+            todo: todo,
+          ),
         ),
       ),
     );
@@ -179,9 +177,7 @@ class HomePage extends StatelessWidget {
     }
 
     if (result != null) {
-      context.read<HomeCubit>().updateTodo(
-        result,
-      );
+      await homeCubit.updateTodo(result);
     }
   }
 
@@ -210,109 +206,82 @@ class TodoItem extends StatelessWidget {
     super.key,
     required this.todo,
     required this.onChanged,
-    required this.onEdit,
-    required this.onDelete,
+    required this.onTap,
   });
 
   final Todo todo;
   final ValueChanged<bool?> onChanged;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 49,
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.only(
-        left: 8,
-        right: 8,
-      ),
-      decoration: BoxDecoration(
-        color: const Color(0xff0d83f6),
-        borderRadius: BorderRadius.circular(7),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 28,
-            child: Checkbox(
-              value: todo.isDone,
-              onChanged: onChanged,
-              checkColor: Colors.black,
-              activeColor: Colors.white,
-              side: const BorderSide(
-                color: Colors.black,
-                width: 2,
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 49,
+        margin: const EdgeInsets.only(bottom: 14),
+        padding: const EdgeInsets.only(
+          left: 8,
+          right: 8,
+        ),
+        decoration: BoxDecoration(
+          color: const Color(0xff0d83f6),
+          borderRadius: BorderRadius.circular(7),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 28,
+              child: Checkbox(
+                value: todo.isDone,
+                onChanged: onChanged,
+                checkColor: Colors.black,
+                activeColor: Colors.white,
+                side: const BorderSide(
+                  color: Colors.black,
+                  width: 2,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              todo.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                todo.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.end,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    color: Colors.white,
-                    size: 8,
-                  ),
-                  const SizedBox(width: 3),
-                  Text(
-                    todo.createdAt,
-                    style: const TextStyle(
+            const SizedBox(width: 8),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.calendar_today_outlined,
                       color: Colors.white,
-                      fontSize: 8,
+                      size: 8,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(
-              Icons.more_vert,
-              color: Colors.white,
-              size: 20,
+                    const SizedBox(width: 3),
+                    Text(
+                      todo.createdAt,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
             ),
-            onSelected: (value) {
-              if (value == 'edit') {
-                onEdit();
-              }
-
-              if (value == 'delete') {
-                onDelete();
-              }
-            },
-            itemBuilder: (context) {
-              return const [
-                PopupMenuItem(
-                  value: 'edit',
-                  child: Text('Изменить'),
-                ),
-                PopupMenuItem(
-                  value: 'delete',
-                  child: Text('Удалить'),
-                ),
-              ];
-            },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_2/database/todo.dart';
+import 'package:to_do_list_2/home/home_cubit.dart';
 
 class AddPage extends StatefulWidget {
   final Todo? todo;
@@ -48,15 +50,26 @@ class _AddPageState extends State<AddPage> {
           onPressed: () {
             Navigator.pop(context);
           },
-          icon: const Icon(Icons.arrow_back_ios_new),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+          ),
         ),
         title: Text(
-          isEdit ? 'Изменить задачу' : 'Новая задача',
+          isEdit ? 'Детали задачи' : 'Новая задача',
           style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w400,
           ),
         ),
+        actions: [
+          if (isEdit)
+            IconButton(
+              onPressed: deleteTodo,
+              icon: const Icon(
+                Icons.delete_outline,
+              ),
+            ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.only(
@@ -121,7 +134,9 @@ class _AddPageState extends State<AddPage> {
               ),
               onPressed: saveTodo,
               child: Text(
-                isEdit ? 'Сохранить изменения' : 'Сохранить',
+                isEdit
+                    ? 'Сохранить изменения'
+                    : 'Сохранить',
               ),
             ),
           ),
@@ -149,6 +164,75 @@ class _AddPageState extends State<AddPage> {
     } else {
       Navigator.pop(context, title);
     }
+  }
+
+  Future<void> deleteTodo() async {
+    final bool? shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        final bool isDarkTheme =
+            Theme.of(context).brightness == Brightness.dark;
+
+        return AlertDialog(
+          backgroundColor: isDarkTheme
+              ? const Color(0xff322d3d)
+              : Colors.white,
+          title: Text(
+            'Удалить задачу?',
+            style: TextStyle(
+              color: isDarkTheme
+                  ? Colors.white
+                  : const Color(0xff222222),
+            ),
+          ),
+          content: Text(
+            'Вы точно хотите удалить задачу?',
+            style: TextStyle(
+              color: isDarkTheme
+                  ? const Color(0xffb8b8c0)
+                  : const Color(0xff555555),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, false);
+              },
+              child: const Text('Отмена'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context, true);
+              },
+              child: const Text(
+                'Удалить',
+                style: TextStyle(
+                  color: Colors.red,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    await context.read<HomeCubit>().deleteTodo(
+      widget.todo!.id,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context);
   }
 
   @override
