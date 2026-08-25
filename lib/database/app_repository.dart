@@ -1,30 +1,26 @@
-import 'package:to_do_list_2/database/app_database.dart';
-import 'package:to_do_list_2/database/todo.dart';
+import 'app_database.dart';
+import 'todo.dart';
 
 class AppRepositoryImpl {
   final AppDatabase db;
 
-  AppRepositoryImpl({required this.db});
-
-  Future<void> loadTodoList() async {
-    await db.loadTodoList();
-  }
-
-  List<Todo> getTodoList() {
-    return db.getTodoList();
-  }
+  AppRepositoryImpl({
+    required this.db,
+  });
 
   Future<void> addTodo(Todo todo) async {
     await db.addTodo(todo);
   }
 
-  Future<void> changeTodoStatus({
-    required int index,
-    required bool isDone,
-  }) async {
-    await db.changeTodoStatus(
-      index: index,
-      isDone: isDone,
-    );
+  Future<List<Todo>> getTodoList() async {
+    return await db.getTodoList();
+  }
+
+  Future<void> updateTodo(Todo todo) async {
+    await db.updateTodo(todo);
+  }
+
+  Future<void> deleteTodo(int id) async {
+    await db.deleteTodo(id);
   }
 }

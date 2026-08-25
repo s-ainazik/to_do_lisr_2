@@ -1,14 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:to_do_list_2/database/todo.dart';
 
 class AddPage extends StatefulWidget {
-  const AddPage({super.key});
+  final Todo? todo;
+
+  const AddPage({
+    super.key,
+    this.todo,
+  });
 
   @override
   State<AddPage> createState() => _AddPageState();
 }
 
 class _AddPageState extends State<AddPage> {
-  final TextEditingController textController = TextEditingController();
+  final TextEditingController textController =
+  TextEditingController();
+
+  bool get isEdit => widget.todo != null;
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (widget.todo != null) {
+      textController.text = widget.todo!.title;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +50,9 @@ class _AddPageState extends State<AddPage> {
           },
           icon: const Icon(Icons.arrow_back_ios_new),
         ),
-        title: const Text(
-          'Новая задача',
-          style: TextStyle(
+        title: Text(
+          isEdit ? 'Изменить задачу' : 'Новая задача',
+          style: const TextStyle(
             fontSize: 20,
             fontWeight: FontWeight.w400,
           ),
@@ -102,7 +120,9 @@ class _AddPageState extends State<AddPage> {
                 ),
               ),
               onPressed: saveTodo,
-              child: const Text('Сохранить'),
+              child: Text(
+                isEdit ? 'Сохранить изменения' : 'Сохранить',
+              ),
             ),
           ),
         ),
@@ -111,7 +131,24 @@ class _AddPageState extends State<AddPage> {
   }
 
   void saveTodo() {
-    Navigator.pop(context, textController.text);
+    final title = textController.text.trim();
+
+    if (title.isEmpty) {
+      return;
+    }
+
+    if (isEdit) {
+      final todo = Todo(
+        id: widget.todo!.id,
+        title: title,
+        createdAt: widget.todo!.createdAt,
+        isDone: widget.todo!.isDone,
+      );
+
+      Navigator.pop(context, todo);
+    } else {
+      Navigator.pop(context, title);
+    }
   }
 
   @override

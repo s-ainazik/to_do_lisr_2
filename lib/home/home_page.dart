@@ -14,8 +14,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-      HomeCubit(
+      create: (context) => HomeCubit(
         repo: AppRepositoryImpl(
           db: AppDatabase(),
         ),
@@ -56,7 +55,10 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget getBody(BuildContext context, HomeState state) {
+  Widget getBody(
+      BuildContext context,
+      HomeState state,
+      ) {
     if (state.status == TodoStatus.isLoading) {
       return const Center(
         child: CircularProgressIndicator(),
@@ -65,14 +67,29 @@ class HomePage extends StatelessWidget {
 
     if (state.status == TodoStatus.empty) {
       return Center(
-        child: Text(
-          'Список задач пустой',
-          style: TextStyle(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.white
-                : const Color(0xff222222),
-            fontSize: 16,
-          ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'Список задач пустой',
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? Colors.white
+                    : const Color(0xff222222),
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Запишите свою первую задачу',
+              style: TextStyle(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? const Color(0xff9ca3af)
+                    : const Color(0xff777777),
+                fontSize: 13,
+              ),
+            ),
+          ],
         ),
       );
     }
@@ -86,12 +103,31 @@ class HomePage extends StatelessWidget {
       ),
       itemCount: state.todoList.length,
       itemBuilder: (context, index) {
+        final todo = state.todoList[index];
+
         return TodoItem(
-          todo: state.todoList[index],
+          todo: todo,
           onChanged: (value) {
-            context.read<HomeCubit>().changeTodoStatus(
-              index: index,
+            final newTodo = Todo(
+              id: todo.id,
+              title: todo.title,
+              createdAt: todo.createdAt,
               isDone: value ?? false,
+            );
+
+            context.read<HomeCubit>().updateTodo(
+              newTodo,
+            );
+          },
+          onEdit: () {
+            openEditPage(
+              context,
+              todo,
+            );
+          },
+          onDelete: () {
+            context.read<HomeCubit>().deleteTodo(
+              todo.id,
             );
           },
         );
@@ -111,14 +147,40 @@ class HomePage extends StatelessWidget {
       return;
     }
 
-    if (result != null && result.trim().isNotEmpty) {
-      context.read<HomeCubit>().addTodo(
-        Todo(
-          id: DateTime.now().millisecondsSinceEpoch,
-          title: result.trim(),
-          createdAt: getDate(),
-          isDone: false,
+    if (result == null || result.trim().isEmpty) {
+      return;
+    }
+
+    final todo = Todo(
+      id: DateTime.now().minute,
+      title: result.trim(),
+      createdAt: getDate(),
+      isDone: false,
+    );
+
+    await context.read<HomeCubit>().addTodo(todo);
+  }
+
+  Future<void> openEditPage(
+      BuildContext context,
+      Todo todo,
+      ) async {
+    final result = await Navigator.push<Todo>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddPage(
+          todo: todo,
         ),
+      ),
+    );
+
+    if (!context.mounted) {
+      return;
+    }
+
+    if (result != null) {
+      context.read<HomeCubit>().updateTodo(
+        result,
       );
     }
   }
@@ -148,10 +210,14 @@ class TodoItem extends StatelessWidget {
     super.key,
     required this.todo,
     required this.onChanged,
+    required this.onEdit,
+    required this.onDelete,
   });
 
   final Todo todo;
   final ValueChanged<bool?> onChanged;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +283,34 @@ class TodoItem extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(
+              Icons.more_vert,
+              color: Colors.white,
+              size: 20,
+            ),
+            onSelected: (value) {
+              if (value == 'edit') {
+                onEdit();
+              }
+
+              if (value == 'delete') {
+                onDelete();
+              }
+            },
+            itemBuilder: (context) {
+              return const [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text('Изменить'),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text('Удалить'),
+                ),
+              ];
+            },
           ),
         ],
       ),

@@ -1,81 +1,67 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:to_do_list_2/database/todo.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'todo.dart';
 
 class AppDatabase {
-  List<Todo> todoList = [];
+  static const String boxName = 'todoBox';
 
-  // Получаем сохраненные задачи
-  Future<void> loadTodoList() async {
-    final preferences = await SharedPreferences.getInstance();
+  Future<Box> getBox() async {
+    if (Hive.isBoxOpen(boxName)) {
+      return Hive.box(boxName);
+    }
 
-    final int count = preferences.getInt('todoCount') ?? 0;
+    return await Hive.openBox(boxName);
+  }
 
-    todoList = [];
+  // CREATE
+  Future<void> addTodo(Todo todo) async {
+    final box = await getBox();
 
-    for (int i = 0; i < count; i++) {
-      final title = preferences.getString('todoTitle$i') ?? '';
-      final createdAt = preferences.getString('todoDate$i') ?? '';
-      final isDone = preferences.getBool('todoDone$i') ?? false;
-      final id = preferences.getInt('todoId$i') ?? 0;
+    await box.put(todo.id, {
+      'id': todo.id,
+      'title': todo.title,
+      'createdAt': todo.createdAt,
+      'isDone': todo.isDone,
+    });
+  }
+
+  // READ
+  Future<List<Todo>> getTodoList() async {
+    final box = await getBox();
+
+    final List<Todo> todoList = [];
+
+    for (final item in box.values) {
+      final data = Map<String, dynamic>.from(item);
 
       todoList.add(
         Todo(
-          id: id,
-          title: title,
-          createdAt: createdAt,
-          isDone: isDone,
+          id: data['id'] as int,
+          title: data['title'] as String,
+          createdAt: data['createdAt'] as String,
+          isDone: data['isDone'] as bool,
         ),
       );
     }
-  }
 
-  List<Todo> getTodoList() {
     return todoList;
   }
 
-  // Добавляем новую задачу в начало списка
-  Future<void> addTodo(Todo todo) async {
-    todoList.insert(0, todo);
+  // UPDATE
+  Future<void> updateTodo(Todo todo) async {
+    final box = await getBox();
 
-    await saveTodoList();
+    await box.put(todo.id, {
+      'id': todo.id,
+      'title': todo.title,
+      'createdAt': todo.createdAt,
+      'isDone': todo.isDone,
+    });
   }
 
-  // Меняем статус задачи
-  Future<void> changeTodoStatus({
-    required int index,
-    required bool isDone,
-  }) async {
-    todoList[index].isDone = isDone;
+  // DELETE
+  Future<void> deleteTodo(int id) async {
+    final box = await getBox();
 
-    await saveTodoList();
-  }
-
-  // Сохраняем все задачи
-  Future<void> saveTodoList() async {
-    final preferences = await SharedPreferences.getInstance();
-
-    await preferences.setInt('todoCount', todoList.length);
-
-    for (int i = 0; i < todoList.length; i++) {
-      await preferences.setString(
-        'todoTitle$i',
-        todoList[i].title,
-      );
-
-      await preferences.setString(
-        'todoDate$i',
-        todoList[i].createdAt,
-      );
-
-      await preferences.setBool(
-        'todoDone$i',
-        todoList[i].isDone,
-      );
-
-      await preferences.setInt(
-        'todoId$i',
-        todoList[i].id,
-      );
-    }
+    await box.delete(id);
   }
 }
