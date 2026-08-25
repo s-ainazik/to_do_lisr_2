@@ -54,6 +54,12 @@ class AppDatabase {
       int index,
       Todo todo,
       ) async {
+    if (todo.title.trim().isEmpty) {
+      throw Exception(
+        'Название задачи не может быть пустым',
+      );
+    }
+
     final box = await getBox();
 
     await box.put(

@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_2/database/app_database.dart';
 import 'package:to_do_list_2/database/app_repository.dart';
 import 'package:to_do_list_2/database/todo.dart';
-import 'package:to_do_list_2/detail_cubit.dart';
-
+import 'package:to_do_list_2/detail/detail_cubit.dart';
+import 'package:to_do_list_2/detail/detail_state.dart';
 
 class AddPage extends StatefulWidget {
   final Todo? todo;
@@ -48,9 +48,22 @@ class _AddPageState extends State<AddPage> {
         ),
         child: Builder(
           builder: (context) {
-            return buildPage(
-              context,
-              isDarkTheme,
+            return BlocListener<DetailCubit, DetailState>(
+              listener: (context, state) {
+                if (state.status == DetailStatus.error) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        state.errorMessage,
+                      ),
+                    ),
+                  );
+                }
+              },
+              child: buildPage(
+                context,
+                isDarkTheme,
+              ),
             );
           },
         ),
@@ -197,6 +210,11 @@ class _AddPageState extends State<AddPage> {
         return;
       }
 
+      if (context.read<DetailCubit>().state.status ==
+          DetailStatus.error) {
+        return;
+      }
+
       Navigator.pop(context);
     } else {
       Navigator.pop(context, title);
@@ -260,6 +278,11 @@ class _AddPageState extends State<AddPage> {
     await context.read<DetailCubit>().deleteTodo();
 
     if (!mounted) {
+      return;
+    }
+
+    if (context.read<DetailCubit>().state.status ==
+        DetailStatus.error) {
       return;
     }
 
