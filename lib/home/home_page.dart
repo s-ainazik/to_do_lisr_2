@@ -115,7 +115,9 @@ class HomePage extends StatelessWidget {
               isDone: value ?? false,
             );
 
-            context.read<HomeCubit>().updateTodo(newTodo);
+            context.read<HomeCubit>().updateTodo(
+              newTodo,
+            );
           },
           onTap: () {
             openEditPage(
@@ -145,13 +147,15 @@ class HomePage extends StatelessWidget {
     }
 
     final todo = Todo(
-      id: DateTime.now().minute,
+      id: DateTime.now().millisecondsSinceEpoch % 0xFFFFFFFF,
       title: result.trim(),
       createdAt: getDate(),
       isDone: false,
     );
 
-    await context.read<HomeCubit>().addTodo(todo);
+    await context.read<HomeCubit>().addTodo(
+      todo,
+    );
   }
 
   Future<void> openEditPage(
@@ -160,14 +164,11 @@ class HomePage extends StatelessWidget {
       ) async {
     final homeCubit = context.read<HomeCubit>();
 
-    final result = await Navigator.push<Todo>(
+    await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: homeCubit,
-          child: AddPage(
-            todo: todo,
-          ),
+        builder: (context) => AddPage(
+          todo: todo,
         ),
       ),
     );
@@ -176,9 +177,7 @@ class HomePage extends StatelessWidget {
       return;
     }
 
-    if (result != null) {
-      await homeCubit.updateTodo(result);
-    }
+    await homeCubit.getTodoList();
   }
 
   void openSettingsPage(BuildContext context) {

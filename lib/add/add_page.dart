@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:to_do_list_2/database/app_database.dart';
+import 'package:to_do_list_2/database/app_repository.dart';
 import 'package:to_do_list_2/database/todo.dart';
-import 'package:to_do_list_2/home/home_cubit.dart';
+import 'package:to_do_list_2/detail_cubit.dart';
+
 
 class AddPage extends StatefulWidget {
   final Todo? todo;
@@ -35,6 +38,35 @@ class _AddPageState extends State<AddPage> {
     final bool isDarkTheme =
         Theme.of(context).brightness == Brightness.dark;
 
+    if (isEdit) {
+      return BlocProvider(
+        create: (context) => DetailCubit(
+          repo: AppRepositoryImpl(
+            db: AppDatabase(),
+          ),
+          todo: widget.todo!,
+        ),
+        child: Builder(
+          builder: (context) {
+            return buildPage(
+              context,
+              isDarkTheme,
+            );
+          },
+        ),
+      );
+    }
+
+    return buildPage(
+      context,
+      isDarkTheme,
+    );
+  }
+
+  Widget buildPage(
+      BuildContext context,
+      bool isDarkTheme,
+      ) {
     return Scaffold(
       backgroundColor: isDarkTheme
           ? const Color(0xff1b1726)
@@ -64,7 +96,9 @@ class _AddPageState extends State<AddPage> {
         actions: [
           if (isEdit)
             IconButton(
-              onPressed: deleteTodo,
+              onPressed: () {
+                deleteTodo(context);
+              },
               icon: const Icon(
                 Icons.delete_outline,
               ),
@@ -132,7 +166,9 @@ class _AddPageState extends State<AddPage> {
                   borderRadius: BorderRadius.circular(7),
                 ),
               ),
-              onPressed: saveTodo,
+              onPressed: () {
+                saveTodo(context);
+              },
               child: Text(
                 isEdit
                     ? 'Сохранить изменения'
@@ -145,7 +181,7 @@ class _AddPageState extends State<AddPage> {
     );
   }
 
-  void saveTodo() {
+  Future<void> saveTodo(BuildContext context) async {
     final title = textController.text.trim();
 
     if (title.isEmpty) {
@@ -153,20 +189,21 @@ class _AddPageState extends State<AddPage> {
     }
 
     if (isEdit) {
-      final todo = Todo(
-        id: widget.todo!.id,
-        title: title,
-        createdAt: widget.todo!.createdAt,
-        isDone: widget.todo!.isDone,
+      await context.read<DetailCubit>().updateTodo(
+        title,
       );
 
-      Navigator.pop(context, todo);
+      if (!mounted) {
+        return;
+      }
+
+      Navigator.pop(context);
     } else {
       Navigator.pop(context, title);
     }
   }
 
-  Future<void> deleteTodo() async {
+  Future<void> deleteTodo(BuildContext context) async {
     final bool? shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -220,13 +257,7 @@ class _AddPageState extends State<AddPage> {
       return;
     }
 
-    if (!mounted) {
-      return;
-    }
-
-    await context.read<HomeCubit>().deleteTodo(
-      widget.todo!.id,
-    );
+    await context.read<DetailCubit>().deleteTodo();
 
     if (!mounted) {
       return;

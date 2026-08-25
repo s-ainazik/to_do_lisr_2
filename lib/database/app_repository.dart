@@ -16,11 +16,17 @@ class AppRepositoryImpl {
     return await db.getTodoList();
   }
 
-  Future<void> updateTodo(Todo todo) async {
-    await db.updateTodo(todo);
+  Future<void> updateTodo(
+      int index,
+      Todo todo,
+      ) async {
+    await db.updateTodo(
+      index,
+      todo,
+    );
   }
 
-  Future<void> deleteTodo(int id) async {
-    await db.deleteTodo(id);
+  Future<void> deleteTodo(int index) async {
+    await db.deleteTodo(index);
   }
 }

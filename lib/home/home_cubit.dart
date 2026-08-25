@@ -2,7 +2,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:to_do_list_2/database/app_repository.dart';
 import 'package:to_do_list_2/database/todo.dart';
 import 'package:to_do_list_2/home/home_state.dart';
-import 'package:flutter/foundation.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   final AppRepositoryImpl repo;
@@ -18,13 +17,14 @@ class HomeCubit extends Cubit<HomeState> {
     ),
   );
 
+  // READ
   Future<void> getTodoList() async {
     todoList = await repo.getTodoList();
 
     if (todoList.isEmpty) {
       emit(
         state.copyWith(
-          todoList: [],
+          todoList: todoList,
           status: TodoStatus.empty,
         ),
       );
@@ -38,24 +38,24 @@ class HomeCubit extends Cubit<HomeState> {
     }
   }
 
+  // CREATE
   Future<void> addTodo(Todo todo) async {
-    debugPrint('СОХРАНЯЕМ: ${todo.title}');
-
     await repo.addTodo(todo);
 
-    debugPrint('ЗАДАЧА СОХРАНЕНА');
-
     await getTodoList();
-
-    debugPrint('ЗАДАЧ В БАЗЕ: ${todoList.length}');
   }
 
+  // UPDATE
   Future<void> updateTodo(Todo todo) async {
-    await repo.updateTodo(todo);
+    await repo.updateTodo(
+      todo.id,
+      todo,
+    );
 
     await getTodoList();
   }
 
+  // DELETE
   Future<void> deleteTodo(int id) async {
     await repo.deleteTodo(id);
 

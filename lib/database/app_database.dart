@@ -16,12 +16,15 @@ class AppDatabase {
   Future<void> addTodo(Todo todo) async {
     final box = await getBox();
 
-    await box.put(todo.id, {
-      'id': todo.id,
-      'title': todo.title,
-      'createdAt': todo.createdAt,
-      'isDone': todo.isDone,
-    });
+    await box.put(
+      todo.id,
+      {
+        'id': todo.id,
+        'title': todo.title,
+        'createdAt': todo.createdAt,
+        'isDone': todo.isDone,
+      },
+    );
   }
 
   // READ
@@ -47,21 +50,27 @@ class AppDatabase {
   }
 
   // UPDATE
-  Future<void> updateTodo(Todo todo) async {
+  Future<void> updateTodo(
+      int index,
+      Todo todo,
+      ) async {
     final box = await getBox();
 
-    await box.put(todo.id, {
-      'id': todo.id,
-      'title': todo.title,
-      'createdAt': todo.createdAt,
-      'isDone': todo.isDone,
-    });
+    await box.put(
+      index,
+      {
+        'id': todo.id,
+        'title': todo.title,
+        'createdAt': todo.createdAt,
+        'isDone': todo.isDone,
+      },
+    );
   }
 
   // DELETE
-  Future<void> deleteTodo(int id) async {
+  Future<void> deleteTodo(int index) async {
     final box = await getBox();
 
-    await box.delete(id);
+    await box.delete(index);
   }
 }
